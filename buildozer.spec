@@ -12,3 +12,5 @@ android.archs = arm64-v8a
 android.api = 33
 android.minapi = 21
 icon.filename = icon.png
+[buildozer]
+warn_on_root = 0
