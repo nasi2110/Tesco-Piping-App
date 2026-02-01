@@ -1,33 +1,31 @@
 [app]
-
-# (1) The Title of your app
+# Basic Information
 title = TESCO Piping
-
-# (2) The name of the package (no spaces)
 package.name = tescoapp
 package.domain = com.tesco.engineering
 
-# (3) Extensions to include (Make sure jpg is here!)
+# Source code and extensions (Must include jpg)
+source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
+version = 1.0
 
-# (4) THE ICON (Make sure this matches your renamed file exactly)
+# THE ICON - This must match your 1024x1024 jpg exactly
 icon.filename = icon.jpg
 
-# (5) Requirements
+# Requirements - Pillow is required to display your jpg plans
 requirements = python3,kivy==2.2.1,pillow,setuptools
 
-# (6) Android specific settings
+# Orientation & Fullscreen
+orientation = landscape
+fullscreen = 1
+
+# Android Architecture & API
 android.archs = arm64-v8a
 android.api = 33
 android.minapi = 21
 android.ndk_api = 21
-# It is safer to let Buildozer choose the NDK version automatically
-# android.ndk = 25b 
-
-# (7) Orientation
-orientation = landscape
 
 [buildozer]
-# This section prevents the "NoSectionError" we saw earlier
+# This section prevents the "NoSectionError" and handles permissions
 log_level = 2
 warn_on_root = 0
