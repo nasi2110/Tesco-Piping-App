@@ -1,89 +1,117 @@
 from kivy.app import App
-from kivy.uix.screenmanager import ScreenManager, Screen, FadeTransition
-from kivy.uix.carousel import Carousel
-from kivy.uix.image import Image
-from kivy.uix.button import Button
+from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.scrollview import ScrollView
+from kivy.uix.button import Button
+from kivy.uix.image import Image
+from kivy.uix.label import Label
+from kivy.uix.carousel import Carousel
 from kivy.core.window import Window
 
-Window.orientation = 'landscape'
+# The Plan Database
+PLAN_DATA = {
+    "SINGLE": {
+        "Plan 01": [12, 13], "Plan 02": [14, 15], "Plan 03": [16, 17],
+        "Plan 11": [18, 19], "Plan 12": [20, 21], "Plan 13": [22, 23],
+        "Plan 14": [24, 25], "Plan 21": [26, 27], "Plan 22": [28, 29],
+        "Plan 23": [30, 31], "Plan 31": [32, 33], "Plan 32": [34, 35],
+        "Plan 41": [36, 37]
+    },
+    "DOUBLE": {
+        "Plan 52": [38, 39], "Plan 53A": [40, 41], "Plan 53B": [42, 43],
+        "Plan 53C": [44, 45], "Plan 54": [46, 47], "Plan 55": [48, 49],
+        "Plan 71": [50, 51], "Plan 72": [52, 53], "Plan 74": [54, 55]
+    },
+    "QUENCH": {
+        "Plan 51": [56, 57], "Plan 61": [58, 59], "Plan 62": [60, 61],
+        "Plan 65A": [62, 63], "Plan 65B": [64, 65], "Plan 66A": [66, 67],
+        "Plan 66B": [68, 69], "Plan 75": [70, 71], "Plan 76": [72, 73]
+    },
+    "GAS": {
+        "Plan 99": [74, 75]
+    }
+}
 
-class CoverScreen(Screen):
+class LandingScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        # Using page_1.jpg as the background
-        self.add_widget(Image(source='page_1.jpg', allow_stretch=True, keep_ratio=False))
-        btn = Button(text="START EXPLORING", size_hint=(0.3, 0.1), pos_hint={'center_x': 0.5, 'y': 0.1})
-        btn.bind(on_press=lambda x: setattr(self.manager, 'current', 'categories'))
-        self.add_widget(btn)
-
-class CategoryScreen(Screen):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        layout = GridLayout(cols=2, padding=50, spacing=20)
-        cats = ["PROCESS SIDE", "BETWEEN SEALS", "ATMOSPHERIC SIDE", "GENERAL LAYOUT"]
-        for cat in cats:
-            btn = Button(text=cat, bold=True)
-            btn.bind(on_press=self.select_cat)
-            layout.add_widget(btn)
+        layout = BoxLayout(orientation='vertical')
+        layout.add_widget(Image(source='tesco_logo.jpg', size_hint_y=0.4, allow_stretch=True))
+        content = BoxLayout(padding=40)
+        btn = Button(text="Mechanical Seal\nAPI Plans", background_color=(0.9, 0.1, 0.1, 1), font_size='24sp', halign='center')
+        btn.bind(on_release=lambda x: setattr(self.manager, 'current', 'dashboard'))
+        content.add_widget(btn)
+        layout.add_widget(content)
+        layout.add_widget(Label(text="©2026 Tesco Engineering", size_hint_y=0.1, color=(0.5,0.5,0.5,1)))
         self.add_widget(layout)
-    def select_cat(self, instance):
-        self.manager.get_screen('list').load_category(instance.text)
-        self.manager.current = 'list'
 
-class ListScreen(Screen):
+class DashboardScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.layout = BoxLayout(orientation='vertical')
-        self.scroll = ScrollView()
-        self.grid = GridLayout(cols=1, size_hint_y=None, spacing=10, padding=10)
-        self.grid.bind(minimum_height=self.grid.setter('height'))
-        self.scroll.add_widget(self.grid)
-        self.layout.add_widget(self.scroll)
-        back = Button(text="BACK TO CATEGORIES", size_hint_y=0.1)
-        back.bind(on_press=lambda x: setattr(self.manager, 'current', 'categories'))
-        self.layout.add_widget(back)
-        self.add_widget(self.layout)
+        Window.bind(on_keyboard=self.on_back_button)
+        self.main_layout = BoxLayout(orientation='vertical')
+        
+        # Navigation
+        nav_bar = GridLayout(cols=4, size_hint_y=0.1)
+        for c in ["SINGLE", "DOUBLE", "QUENCH", "GAS"]:
+            b = Button(text=c, background_normal='', background_color=(0.8, 0, 0, 1), font_size='12sp')
+            b.bind(on_release=self.show_plans)
+            nav_bar.add_widget(b)
+        self.main_layout.add_widget(nav_bar)
 
-    def load_category(self, category):
-        self.grid.clear_widgets()
-        # Mapping: (Plan Name, Image Page, Notes Page)
-        data = {
-            "PROCESS SIDE": [("Plan 01", 12, 13), ("Plan 02", 14, 15)],
-            "BETWEEN SEALS": [("Plan 52", 38, 39)],
-            "ATMOSPHERIC SIDE": [("Plan 51", 56, 57)],
-            "GENERAL LAYOUT": [("Plan 99", 74, 75)]
-        }
-        for name, img, note in data.get(category, []):
-            btn = Button(text=name, size_hint_y=None, height=120)
-            btn.bind(on_press=lambda x, i=img, n=note: self.open_plan(i, n))
-            self.grid.add_widget(btn)
-    def open_plan(self, img, note):
-        self.manager.get_screen('viewer').setup(img, note)
-        self.manager.current = 'viewer'
+        # Content Area
+        self.display = FloatLayout()
+        self.banner = Image(source='company_banner.jpg', size_hint=(1, 1), allow_stretch=True, keep_ratio=False)
+        self.display.add_widget(self.banner)
+        
+        # Scrollable Floating List
+        self.scroll = ScrollView(size_hint=(0.5, 0.7), pos_hint={'x': 0.05, 'top': 0.95})
+        self.list_grid = GridLayout(cols=1, size_hint_y=None, spacing=2)
+        self.list_grid.bind(minimum_height=self.list_grid.setter('height'))
+        self.scroll.add_widget(self.list_grid)
+        
+        self.main_layout.add_widget(self.display)
+        self.add_widget(self.main_layout)
 
-class ViewerScreen(Screen):
-    def setup(self, img, note):
-        self.clear_widgets()
-        l = BoxLayout(orientation='vertical')
-        c = Carousel()
-        c.add_widget(Image(source=f'page_{img}.jpg'))
-        c.add_widget(Image(source=f'page_{note}.jpg'))
-        l.add_widget(c)
-        btn = Button(text="BACK TO LIST", size_hint_y=0.1)
-        btn.bind(on_press=lambda x: setattr(self.manager, 'current', 'list'))
-        l.add_widget(btn)
-        self.add_widget(l)
+    def on_back_button(self, window, key, *args):
+        if key == 27:
+            if self.scroll.parent:
+                self.display.remove_widget(self.scroll)
+                return True
+            self.manager.current = 'landing'
+            return True
+        return False
+
+    def show_plans(self, instance):
+        self.list_grid.clear_widgets()
+        category = instance.text
+        for plan_name in PLAN_DATA[category]:
+            btn = Button(text=plan_name, size_hint_y=None, height=50)
+            btn.bind(on_release=lambda x: self.open_carousel(category, x.text))
+            self.list_grid.add_widget(btn)
+        if not self.scroll.parent:
+            self.display.add_widget(self.scroll)
+
+    def open_carousel(self, cat, plan_name):
+        self.display.clear_widgets()
+        carousel = Carousel(direction='right')
+        # Map indices: 0=Image, 1=Notes
+        img_idx, note_idx = PLAN_DATA[cat][plan_name]
+        
+        # The 4 Slides: Plan Img, Plan Notes, Legend (Pg 4), Symbol Notes (Pg 5)
+        pages = [img_idx, note_idx, 4, 5]
+        for p in pages:
+            carousel.add_widget(Image(source=f'page_{p}.jpg', allow_stretch=True))
+        
+        self.display.add_widget(carousel)
 
 class TescoApp(App):
     def build(self):
-        sm = ScreenManager(transition=FadeTransition())
-        sm.add_widget(CoverScreen(name='cover'))
-        sm.add_widget(CategoryScreen(name='categories'))
-        sm.add_widget(ListScreen(name='list'))
-        sm.add_widget(ViewerScreen(name='viewer'))
+        sm = ScreenManager()
+        sm.add_widget(LandingScreen(name='landing'))
+        sm.add_widget(DashboardScreen(name='dashboard'))
         return sm
 
 if __name__ == '__main__':
