@@ -11,7 +11,7 @@ requirements = python3,kivy==2.2.1,pillow,setuptools
 
 orientation = landscape
 fullscreen = 1
-icon.filename = icon.jpg
+icon.filename = icon.png
 
 # --- RELEASE SETTINGS ---
 # This ensures Buildozer produces an APK file
