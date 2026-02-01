@@ -40,9 +40,13 @@ jobs:
 
       - name: Build and Sign APK
         run: |
-          # Increase Java memory to handle the 100+ images
+          # Give Java maximum memory for your images
           export GRADLE_OPTS="-Xmx4g -Xms2g"
-          # Debug flag forces the real error to show instead of "Broken pipe"
+          
+          # Force clean the build environment to prevent "Broken Pipe"
+          buildozer android clean
+          
+          # Run the release with the debug flag for clear error messages
           yes | buildozer -v android release -- --debug
         env:
           BUILDOZER_ALLOW_KIVY_ITERATION: 1
