@@ -5,16 +5,18 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Build with Buildozer
-        uses: ArtemSerebriakov/buildozer-action@v1
+        # This uses a maintained version of the buildozer action
+        uses: herberthperez/buildozer-action@v1
         with:
           command: buildozer android debug
           buildozer_version: master
 
       - name: Upload APK Artifact
-        uses: actions/upload-artifact@v3
+        # Updated to v4 to fix the deprecation error
+        uses: actions/upload-artifact@v4
         with:
-          name: package
+          name: Tesco-Piping-App-APK
           path: bin/*.apk
