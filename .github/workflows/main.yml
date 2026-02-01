@@ -1,1 +1,57 @@
-buildozer android clean
+name: Build Android APK
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential git python3-dev libsdl2-dev libsdl2-image-dev \
+            libsdl2-mixer-dev libsdl2-ttf-dev libportmidi-dev libswscale-dev \
+            libavformat-dev libavcodec-dev zlib1g-dev libsqlite3-dev ncurses-bin \
+            cpufrequtils libncurses5-dev libncursesw5-dev libffi-dev libssl-dev \
+            cmake ant autoconf automake libltdl-dev libgmp-dev libmpc-dev \
+            libmpfr-dev pkg-config libtool unzip zip
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Buildozer & Cython
+        run: |
+          pip install --upgrade pip
+          pip install "cython<3.0.0" buildozer 
+
+      - name: Build and Sign APK
+        run: |
+          # This is where the cleanup command goes!
+          buildozer android clean
+          yes | buildozer -v android release
+        env:
+          BUILDOZER_ALLOW_KIVY_ITERATION: 1
+          BUILDOZER_WARN_ON_ROOT: 0
+          P4A_RELEASE_KEYSTORE: my-release.keystore
+          P4A_RELEASE_KEYSTORE_PASSWD: ${{ secrets.P12_PASSWORD }}
+          P4A_RELEASE_KEYALIAS_PASSWD: ${{ secrets.P12_PASSWORD }}
+          P4A_RELEASE_KEYALIAS: ${{ secrets.P12_ALIAS }}
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Tesco-Piping-Final-App
+          path: bin/*.apk
