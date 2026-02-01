@@ -7,45 +7,44 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Dependencies
+      - name: Fix Apt Mirrors
+        # Sometimes exit code 100 happens because a server is down. 
+        # This refreshes the sources.
         run: |
+          sudo rm -rf /var/lib/apt/lists/*
           sudo apt-get update
+
+      - name: Install System Dependencies
+        run: |
           sudo apt-get install -y \
-            build-essential git ffmpeg libgstreamer1.0-dev \
-            libgstreamer-plugins-base1.0-dev libgstreamer-plugins-good1.0-dev \
-            libgstreamer-plugins-bad1.0-dev gstreamer1.0-plugins-base \
-            gstreamer1.0-plugins-good gstreamer1.0-plugins-bad \
-            gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-doc \
-            gstreamer1.0-tools gstreamer1.0-x gstreamer1.0-alsa \
-            gstreamer1.0-gl gstreamer1.0-gtk3 gstreamer1.0-qt5 \
-            gstreamer1.0-pulseaudio python3-dev libsdl2-dev \
-            libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev \
-            libportmidi-dev libswscale-dev libavformat-dev \
-            libavcodec-dev zlib1g-dev libsqlite3-dev ncurses-bin \
-            cpufrequtils libncurses5-dev libncursesw5-dev \
-            libffi-dev libssl-dev cmake ant autoconf automake \
-            libltdl-dev libgmp-dev libmpc-dev libmpfr-dev \
-            pkg-config libtool openjdk-17-jdk-headless
+            build-essential git python3-dev libsdl2-dev libsdl2-image-dev \
+            libsdl2-mixer-dev libsdl2-ttf-dev libportmidi-dev libswscale-dev \
+            libavformat-dev libavcodec-dev zlib1g-dev libsqlite3-dev ncurses-bin \
+            cpufrequtils libncurses5-dev libncursesw5-dev libffi-dev libssl-dev \
+            cmake ant autoconf automake libltdl-dev libgmp-dev libmpc-dev \
+            libmpfr-dev pkg-config libtool openjdk-17-jdk-headless unzip zip
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: Install Buildozer
+      - name: Install Buildozer & Cython
         run: |
           pip install --upgrade pip
-          pip install buildozer cython==0.29.33
+          pip install "cython<3.0.0" buildozer 
 
-      - name: Build APK
+      - name: Build with Buildozer
+        # We add 'force_build_root' to bypass the permission issues
         run: |
-          yes | buildozer android debug
+          yes | buildozer -v android debug
         env:
-          # This bypasses the "Running as root" warning in the GitHub environment
-          BUILDOZER_ALLOW_ORG_DOCS_STDOUT: 1
+          # This is the "Magic" environment variable for GitHub Actions
+          BUILDOZER_ALLOW_KIVY_ITERATION: 1
+          BUILDOZER_WARN_ON_ROOT: 0
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Tesco-App-APK
+          name: Tesco-Piping-App
           path: bin/*.apk
