@@ -1,5 +1,5 @@
 [app]
-title = TESCO Piping
+title = TESCO API plans
 package.name = tescoapp
 package.domain = com.tesco.engineering
 source.dir = .
