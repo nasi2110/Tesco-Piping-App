@@ -40,9 +40,10 @@ jobs:
 
       - name: Build and Sign APK
         run: |
+          # Memory fix to prevent "Broken Pipe" during packaging
           export GRADLE_OPTS="-Xmx4g -Xms2g"
-          # Adding --info helps us see the EXACT signing error
-          yes | buildozer -v android release
+          # Adding -- --info forces detailed logging for signing errors
+          yes | buildozer -v android release -- --info
         env:
           BUILDOZER_ALLOW_KIVY_ITERATION: 1
           BUILDOZER_WARN_ON_ROOT: 0
