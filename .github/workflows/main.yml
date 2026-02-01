@@ -3,20 +3,49 @@ on: [push, pull_request]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build with Buildozer
-        # This uses a maintained version of the buildozer action
-        uses: herberthperez/buildozer-action@v1
-        with:
-          command: buildozer android debug
-          buildozer_version: master
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential git ffmpeg libgstreamer1.0-dev \
+            libgstreamer-plugins-base1.0-dev libgstreamer-plugins-good1.0-dev \
+            libgstreamer-plugins-bad1.0-dev gstreamer1.0-plugins-base \
+            gstreamer1.0-plugins-good gstreamer1.0-plugins-bad \
+            gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-doc \
+            gstreamer1.0-tools gstreamer1.0-x gstreamer1.0-alsa \
+            gstreamer1.0-gl gstreamer1.0-gtk3 gstreamer1.0-qt5 \
+            gstreamer1.0-pulseaudio python3-dev libsdl2-dev \
+            libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev \
+            libportmidi-dev libswscale-dev libavformat-dev \
+            libavcodec-dev zlib1g-dev libsqlite3-dev ncurses-bin \
+            cpufrequtils libncurses5-dev libncursesw5-dev \
+            libffi-dev libssl-dev cmake ant autoconf automake \
+            libltdl-dev libgmp-dev libmpc-dev libmpfr-dev \
+            pkg-config libtool openjdk-17-jdk-headless
 
-      - name: Upload APK Artifact
-        # Updated to v4 to fix the deprecation error
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Buildozer
+        run: |
+          pip install --upgrade pip
+          pip install buildozer cython==0.29.33
+
+      - name: Build APK
+        run: |
+          yes | buildozer android debug
+        env:
+          # This bypasses the "Running as root" warning in the GitHub environment
+          BUILDOZER_ALLOW_ORG_DOCS_STDOUT: 1
+
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Tesco-Piping-App-APK
+          name: Tesco-App-APK
           path: bin/*.apk
