@@ -4,7 +4,7 @@ package.name = tescoapp
 package.domain = com.tesco.engineering
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
-version = 1.0
+version = 1.1
 
 # Critical Requirements
 requirements = python3,kivy==2.2.1,pillow,setuptools
