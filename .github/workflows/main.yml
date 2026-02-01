@@ -40,18 +40,17 @@ jobs:
 
       - name: Build and Sign APK
         run: |
-          # Give Java maximum memory for your images
+          # Give Java maximum memory
           export GRADLE_OPTS="-Xmx4g -Xms2g"
           
-          # Force clean the build environment to prevent "Broken Pipe"
-          buildozer android clean
-          
-          # Run the release with the debug flag for clear error messages
+          # We removed 'buildozer android clean' to fix the FileNotFoundError
+          # Running with -v (verbose) and --debug to catch the exact signing issue
           yes | buildozer -v android release -- --debug
         env:
           BUILDOZER_ALLOW_KIVY_ITERATION: 1
           BUILDOZER_WARN_ON_ROOT: 0
-          P4A_RELEASE_KEYSTORE: my-release.keystore
+          # We use the full workspace path to make sure it finds your file
+          P4A_RELEASE_KEYSTORE: ${{ github.workspace }}/my-release.keystore
           P4A_RELEASE_KEYSTORE_PASSWD: ${{ secrets.P12_PASSWORD }}
           P4A_RELEASE_KEYALIAS_PASSWD: ${{ secrets.P12_PASSWORD }}
           P4A_RELEASE_KEYALIAS: ${{ secrets.P12_ALIAS }}
