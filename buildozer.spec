@@ -13,7 +13,15 @@ orientation = landscape
 fullscreen = 1
 icon.filename = icon.jpg
 
+# --- RELEASE SETTINGS ---
+# This ensures Buildozer produces an APK file
+android.release_artifact = apk
+# Set to 0 to remove the 'debug' watermark from your icon
+android.debug_artifacts = 0
+
 # Android Architecture
+# arm64-v8a is for modern phones. 
+# You can add armeabi-v7a if you want to support very old phones.
 android.archs = arm64-v8a
 android.api = 33
 android.minapi = 21
