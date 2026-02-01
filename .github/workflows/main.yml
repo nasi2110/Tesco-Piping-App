@@ -7,15 +7,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Fix Apt Mirrors
-        # Sometimes exit code 100 happens because a server is down. 
-        # This refreshes the sources.
-        run: |
-          sudo rm -rf /var/lib/apt/lists/*
-          sudo apt-get update
-
       - name: Install System Dependencies
         run: |
+          sudo apt-get update
           sudo apt-get install -y \
             build-essential git python3-dev libsdl2-dev libsdl2-image-dev \
             libsdl2-mixer-dev libsdl2-ttf-dev libportmidi-dev libswscale-dev \
@@ -35,13 +29,8 @@ jobs:
           pip install "cython<3.0.0" buildozer 
 
       - name: Build with Buildozer
-        # We add 'force_build_root' to bypass the permission issues
         run: |
           yes | buildozer -v android debug
-        env:
-          # This is the "Magic" environment variable for GitHub Actions
-          BUILDOZER_ALLOW_KIVY_ITERATION: 1
-          BUILDOZER_WARN_ON_ROOT: 0
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
